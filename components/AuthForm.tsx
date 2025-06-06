@@ -84,7 +84,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
                 <div className="flex flex-row gap-2 justify-center">
                     <h3>Practice job interview with AI</h3>
                 </div>
-
+{/*eslint-disable-next-line @typescript-eslint/no-unused-vars */}
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-6 mt-4 form">
                         {!isSignIn && (

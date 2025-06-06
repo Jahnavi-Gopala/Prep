@@ -27,7 +27,7 @@ const page = () => {
               <InterviewCard {...interview} key={interview.id}/>
             ))}
           </div>
-            <p>You haven't taken any interviews yet</p>
+            <p>You haven&apos;t taken any interviews yet</p>
       </section>
       <section className='flex flex-col gap-6 mt-8'>
           <h2>Take an Interview</h2>
