@@ -2,7 +2,6 @@ import { db } from "@/firebase/admin";
 import { getRandomInterviewCover } from "@/lib/utils";
 import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
-
 export async function GET() {
   return Response.json({ success: true, data: "THANK YOU!" }, { status: 200 });
 }
@@ -28,10 +27,10 @@ export async function POST(request: Request) {
     });
 
     const interview = {
-      role,
-      level,
+      role: role,
+      level:level,
       techstack: techstack.split(","),
-      type,
+      type:type,
       amount,
       userId: userid,
       questions: JSON.parse(questions),
@@ -41,7 +40,6 @@ export async function POST(request: Request) {
     };
 
     await db.collection("interviews").add(interview);
-
     return Response.json({ success: true }, { status: 200 });  
   } catch (error) {
     console.error("Error", error);
