@@ -5,7 +5,7 @@ import { db, auth } from "@/firebase/admin";
 import { cookies } from "next/headers";
 // Only import client-side Firebase Auth in client-side code, not here
 
-export  async function signUp(params: SignUpParams){
+export  async function signUp( params: SignUpParams){
     const {uid, name, email} = params;
     try{
         const userRecord = await db.collection('users').doc(uid).get();
@@ -52,6 +52,11 @@ export  async function signIn(params: SignInParams){
             }
         }
         await setSessionCookie(idToken);
+        return {
+            success: true,
+            message: 'Sign-in successful.',
+            uid: userRecord.uid,
+            };
     }catch(error){
         console.error('Error during sign in:', error);
         return {
@@ -120,29 +125,6 @@ export async function isAuthenticated(){
     return !!user;
 }
 
-export async function getInterviewByUserId(userId: string):Promise<Interview[] | null> {
-    const interviews = await db
-        .collection('interviews')
-        .where('userId', '==', userId)
-        .orderBy('createdAt', 'desc')
-        .get();
-    return interviews.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-    } as Interview));
-}
 
-export async function getLatestInterviews(params: GetLatestInterviewsParams):Promise<Interview[] | null> {
-    const { userId, limit=20 } = params;
-    const interviews = await db
-        .collection('interviews')
-        .orderBy('createdAt', 'desc')
-        .where('finalized', '==', true)
-        .where('userId', '!=', userId)
-        .limit(limit)
-        .get();
-    return interviews.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-    } as Interview));
-}
+
+
