@@ -13,7 +13,7 @@ import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { auth } from "@/firebase/client"
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth"
-import { signIn, signUp } from "@/lib/actions/auth.actions"
+import { signIn, signInWithGoogle, signUp } from "@/lib/actions/auth.actions"
 
 const authFormTypes = (type: FormType)=>{
     return z.object({
@@ -120,8 +120,17 @@ const AuthForm = ({ type }: { type: FormType }) => {
                                 </div>
                             )}
                         />
-
                         <Button className="btn" type="submit">{isSignIn ? "Sign In" : "Create an Account"}</Button>
+                        <p className="text-center text-light-100 mx-4">--------------------------Or--------------------------</p>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="btn w-full flex items-center justify-center gap-2"
+                            onClick={signInWithGoogle}
+                        >
+                            <Image src="/google-icon.svg" alt="Google" width={20} height={20} />
+                            Continue with Google
+                        </Button>
                     </form>
                 </Form>
                 <p className="text-center">

@@ -3,6 +3,8 @@ import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth as clientAuth } from "@/firebase/client"; 
 import { db, auth } from "@/firebase/admin";
 import { cookies } from "next/headers";
+import { toast } from "sonner";
+// import router from "next/router";
 // Only import client-side Firebase Auth in client-side code, not here
 
 export  async function signUp( params: SignUpParams){
@@ -86,8 +88,15 @@ export const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
     // Ensure clientAuth is the client-side Firebase Auth instance
     const result = await signInWithPopup(clientAuth, provider);
-
     const user = result.user;
+
+    const idToken = await user.getIdToken();
+    await signIn({
+            email: user.email!,
+            idToken,
+        });
+        toast.success("Signed in with Google!");
+
     console.log("Google User:", user);
     return user;
   } catch (error) {
