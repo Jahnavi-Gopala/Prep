@@ -1,5 +1,5 @@
 'use server';
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { GoogleAuthProvider, getRedirectResult, signInWithRedirect,signInWithPopup } from "firebase/auth";
 import { auth as clientAuth } from "@/firebase/client"; 
 import { db, auth } from "@/firebase/admin";
 import { cookies } from "next/headers";
@@ -91,12 +91,15 @@ export const signInWithGoogle = async () => {
     const user = result.user;
 
     const idToken = await user.getIdToken();
-    await signIn({
+    const response = await signIn({
             email: user.email!,
             idToken,
         });
         toast.success("Signed in with Google!");
-
+        if (!response.success) {
+        toast.error(response.message || "Google sign-in failed.");
+        return;
+    }
     console.log("Google User:", user);
     return user;
   } catch (error) {
@@ -104,6 +107,43 @@ export const signInWithGoogle = async () => {
     throw error;
   }
 };
+
+// export const loginWithGoogle = async () => {
+//     const provider = new GoogleAuthProvider();
+//     signInWithRedirect(clientAuth, provider);
+//     getRedirectResult(clientAuth)
+//         .then((result) => {
+//         const credential = GoogleAuthProvider.credentialFromResult(result);
+//         const token = credential.accessToken;
+//         const user = result.user;
+//   }).catch((error) => {
+//         const errorCode = error.code;
+//         const errorMessage = error.message;
+//         const email = error.customData.email;
+//         const credential = GoogleAuthProvider.credentialFromError(error);
+//   });
+// }
+export const loginWithGoogle = () => {
+  const provider = new GoogleAuthProvider();
+  signInWithRedirect(clientAuth, provider);
+};
+
+// Call this on page load (or inside a useEffect in React)
+export const handleRedirectResult = async () => {
+  try {
+    const result = await getRedirectResult(clientAuth);
+    if (result) {
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      const token = credential ? credential.accessToken : null;
+      const user = result.user;
+      console.log("User:", user);
+      console.log("Access Token:", token);
+    }
+  } catch (error) {
+    console.error("Error:");
+  }
+};
+
 
 export async function getCurrentUser(): Promise<User | null>{
     const cookieStore = await cookies();
