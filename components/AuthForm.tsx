@@ -147,52 +147,43 @@
 
 // export default AuthForm
 
-"use client"
+"use client";
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Form, FormField } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import Link from "next/link"
-import { toast } from "sonner"
-import { useRouter } from "next/navigation"
-import { auth } from "@/firebase/client"
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Form, FormField } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import Link from "next/link";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { auth, db } from "@/firebase/client";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider
-} from "firebase/auth"
-import { signIn, signUp } from "@/lib/actions/auth.actions"
+} from "firebase/auth";
+import { signIn, signUp } from "@/lib/actions/auth.actions";
+import {doc , setDoc, getDoc} from "firebase/firestore";
 
-// Define the FormType type
-type FormType = "sign-in" | "sign-up"
 
-// Create Zod schema generator
+// Type for the form mode
+type FormType = "sign-in" | "sign-up";
+
+// Schema generator
 const getAuthSchema = (type: FormType) =>
   z.object({
     name: type === "sign-up" ? z.string().min(3, "Name too short").max(50) : z.string().optional(),
     email: z.string().email("Invalid email"),
     password: z.string().min(8, "Password must be at least 8 characters")
-  })
-
-// Google sign-in handler
-async function signInWithGoogle() {
-  try {
-    const provider = new GoogleAuthProvider()
-    await signInWithPopup(auth, provider)
-    toast.success("Signed in with Google!")
-  } catch (error: any) {
-    toast.error(error.message || "Google sign-in failed")
-  }
-}
+  });
 
 const AuthForm = ({ type }: { type: FormType }) => {
-  const router = useRouter()
-  const formSchema = getAuthSchema(type)
+  const router = useRouter();
+  const formSchema = getAuthSchema(type);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -201,49 +192,105 @@ const AuthForm = ({ type }: { type: FormType }) => {
       email: "",
       password: ""
     }
-  })
+  });
+
+//   const provider = new GoogleAuthProvider();
+//   const handleGoogleSignIn = async () => {
+//     try{
+//         await signInWithPopup(auth, provider);
+//         provider.addScope("profile");
+//         provider.addScope("email");
+//         provider.addScope("name");
+//         const user = auth.currentUser;
+//         if(user){
+//             const userDocRef = doc (db, "users", user.uid);
+//             const userDocSnapshot = await getDoc(userDocRef);
+//             if (!userDocSnapshot.exists()) {
+//                 await setDoc(userDocRef, {
+//                     name: user.displayName,
+//                     email: user.email
+//                 });
+//             }
+//         }
+//         toast.success("Signed in successfully!");
+//         router.push('/');
+//     }catch (error: any) {
+//       console.error("Google Sign-In Error:", error);
+//       toast.error(error.message || "Failed to sign in with Google.");
+//     }
+//   }
+    const provider = new GoogleAuthProvider();
+    provider.addScope("profile");
+    provider.addScope("email");
+
+const handleGoogleSignIn = async () => {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+    const email = user.email || user.providerData[0]?.email;
+
+    if (!email) throw new Error("No email returned from Google");
+    localStorage.setItem("uid", user.uid);
+
+    const userDocRef = doc(db, "users", user.uid);
+    const userDocSnapshot = await getDoc(userDocRef);
+    if (!userDocSnapshot.exists()) {
+      await setDoc(userDocRef, {
+        name: user.displayName,
+        email: email
+      });
+    }
+    toast.success("Signed in successfully!");
+    router.push('/');
+  } catch (error: any) {
+    console.error("Google Sign-In Error:", error);
+    toast.error(error.message || "Failed to sign in with Google.");
+  }
+};
+
+
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       if (type === "sign-up") {
-        const { name, email, password } = values
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+        const { name, email, password } = values;
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
 
         const result = await signUp({
           name: name!,
           email,
           password,
           uid: userCredential.user.uid
-        })
+        });
 
         if (!result || !result.success) {
-          toast.error(result?.message || "Unknown error occurred.")
-          return
+          toast.error(result?.message || "Unknown error occurred.");
+          return;
         }
 
-        toast.success("Account created successfully!")
-        router.push("/sign-in")
+        toast.success("Account created successfully!");
+        router.push("/sign-in");
       } else {
-        const { email, password } = values
-        const userCredential = await signInWithEmailAndPassword(auth, email, password)
-        const idToken = await userCredential.user.getIdToken()
+        const { email, password } = values;
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const idToken = await userCredential.user.getIdToken();
 
         if (!idToken) {
-          toast.error("Failed to get ID token.")
-          return
+          toast.error("Failed to get ID token.");
+          return;
         }
 
-        await signIn({ email, idToken })
-        toast.success("Signed in successfully!")
-        router.push("/")
+        await signIn({ email, idToken });
+        toast.success("Signed in successfully!");
+        router.push("/");
       }
     } catch (error: any) {
-      console.error("Error submitting form:", error)
-      toast.error(error.message || "There was an error submitting the form.")
+      console.error("Error submitting form:", error);
+      toast.error(error.message || "There was an error submitting the form.");
     }
   }
 
-  const isSignIn = type === "sign-in"
+  const isSignIn = type === "sign-in";
 
   return (
     <div className="card-border lg:min-w-[566px]">
@@ -308,7 +355,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
               type="button"
               variant="outline"
               className="btn w-full flex items-center justify-center gap-2"
-              onClick={signInWithGoogle}
+              onClick={handleGoogleSignIn}
             >
               <Image src="/google-icon.svg" alt="Google" width={20} height={20} />
               Continue with Google
@@ -324,7 +371,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
         </p>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AuthForm
+export default AuthForm;
