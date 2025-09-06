@@ -13,6 +13,7 @@ const initFirebaseAdmin = () => {
             })
         });
     }
+    
     return {
         auth : getAuth(),
         db: getFirestore(),

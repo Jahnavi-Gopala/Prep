@@ -18,19 +18,19 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-const signInWithGoogle = async () => {
-  const provider = new GoogleAuthProvider();
+// const signInWithGoogle = async () => {
+//   const provider = new GoogleAuthProvider();
 
-  try {
-    const result = await signInWithPopup(auth, provider); // ✅ Works in browser
-    const user = result.user;
-    const idToken = await user.getIdToken();
+//   try {
+//     const result = await signInWithPopup(auth, provider); // ✅ Works in browser
+//     const user = result.user;
+//     const idToken = await user.getIdToken();
 
-    // Send idToken to your backend or store session
-    return { success: true, user, idToken };
-  } catch (error: any) {
-    console.error("Google Sign-In Error:", error);
-    return { success: false, message: error.message };
-  }
-};
-export { signInWithGoogle };
+//     // Send idToken to your backend or store session
+//     return { success: true, user, idToken };
+//   } catch (error: any) {
+//     console.error("Google Sign-In Error:", error);
+//     return { success: false, message: error.message };
+//   }
+// };
+// export { signInWithGoogle };

@@ -1,4 +1,6 @@
 'use server';
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { auth as clientAuth } from "@/firebase/client"; 
 import { db, auth } from "@/firebase/admin";
 import { cookies } from "next/headers";
 // Only import client-side Firebase Auth in client-side code, not here
@@ -43,7 +45,6 @@ export  async function signIn(params: SignInParams){
     const {email, idToken} = params;
     try{
         const userRecord = await auth.getUserByEmail(email);
-        
         if (!userRecord) {
             return {
                 success: false,
@@ -80,6 +81,21 @@ export async function setSessionCookie(idToken:string) {
     })
 }
 
+// export const signInWithGoogle = async (uid: any, name: any, email: any, idToken: any) => {
+//   try {
+//     const provider = new GoogleAuthProvider();
+//     // Ensure clientAuth is the client-side Firebase Auth instance
+//     const result = await signInWithPopup(clientAuth, provider);
+
+//     const user = result.user;
+//     console.log("Google User:", user);
+//     return user;
+//   } catch (error) {
+//     console.error("Google Sign-In Error", error);
+//     throw error;
+//   }
+// };
+
 export async function getCurrentUser(): Promise<User | null>{
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get('session')?.value;
@@ -109,6 +125,25 @@ export async function isAuthenticated(){
     return !!user;
 }
 
+
+// export async function signInWithGoogle() {
+//   try {
+//     const res = await fetch("/api/auth/google-signin", {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" }
+//     });
+
+//     if (!res.ok) {
+//       return { success: false, message: "Failed to sign in" };
+//     }
+
+//     const data = await res.json();
+//     return { success: true, data };
+//   } catch (error) {
+//     console.error("Google sign-in error:", error);
+//     return { success: false, message: "Internal server error" };
+//   }
+// }
 
 
 
